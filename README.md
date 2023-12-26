@@ -6,6 +6,18 @@ qdrant works, but when recreate collection, it shows time out all the time, and 
 
 langchain have a good start and good ideas, but in the day of exploding ai technics, it seems a little bit lost.
 
-## TODO:
+## Try Gemini
 
-test gemini chat
+test gemini chat...failed.  seems like langchain chat api not function in a  right way, like gemini never receive chat history and referenced documents.
+
+## Learning
+
+learn langchain from this project: https://github.com/alejandro-ao/ask-multiple-pdfs
+
+and then try to port it to gemini api, but failed...
+
+learnt a lot, streamlit is good and qdrant is finally work.
+
+## todo
+
+i'd still try to make gemini work, for it's free so far..., some days later maybe, give langchain some time to fix their codes :)
