@@ -9,7 +9,7 @@ from langchain.chat_models import ChatOpenAI
 from langchain.vectorstores.qdrant import Qdrant
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from htmlTemplates import css, bot_template, user_template
+# from htmlTemplates import css, bot_template, user_template
 from utils import get_pdf_text, get_text_chunks
 from dotenv import load_dotenv
 
@@ -62,7 +62,7 @@ def load_conversation_chain(collection):
     and then initial a conversation chain
     """
     # choose model (gpt-4 is better but expensive)
-    llm = ChatOpenAI(model='gpt-3.5-turbo-1106')
+    llm = ChatOpenAI(model="gpt-4")
 
     # load vector store from qdrant
     client = QdrantClient(os.getenv("QDRANT_URL"))
@@ -89,22 +89,27 @@ def handle_userinput(user_question):
     """
     response = st.session_state.conversation({"question": user_question})
     st.session_state.chat_history = response["chat_history"]
+    print(st.session_state.chat_history)
 
     for i, message in enumerate(st.session_state.chat_history):
         if i % 2 == 0:
-            st.write(
-                user_template.replace("{{MSG}}", message.content),
-                unsafe_allow_html=True,
-            )
+            # st.write(
+            #     user_template.replace("{{MSG}}", message.content),
+            #     unsafe_allow_html=True,
+            # )
+            with st.chat_message('user'):
+                st.markdown(message.content)
         else:
-            st.write(
-                bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True
-            )
+            # st.write(
+            #     bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True
+            # )
+            with st.chat_message('assistant'):
+                st.markdown(message.content)
 
 
 def main():
     st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
-    st.write(css, unsafe_allow_html=True)
+    # st.write(css, unsafe_allow_html=True)
 
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
@@ -159,8 +164,7 @@ def main():
         f"Chat with {st.session_state.collection if st.session_state.collection else 'your PDFs'} :books:"
     )
     if st.session_state.collection:
-        user_question = st.text_input("Ask a question about your documents:")
-        if user_question:
+        if user_question := st.chat_input("Ask a question about your documents:"):
             handle_userinput(user_question)
     else:
         st.write("上传或者选择资料库")

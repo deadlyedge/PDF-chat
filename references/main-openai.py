@@ -12,7 +12,7 @@ from langchain.vectorstores.qdrant import Qdrant
 from langchain.chat_models import ChatOpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from htmlTemplates import css, bot_template, user_template
+from references.htmlTemplates import css, bot_template, user_template
 from qdrant_client import QdrantClient
 
 

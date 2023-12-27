@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from langchain.vectorstores.qdrant import Qdrant
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from htmlTemplates import css, bot_template, user_template
+from references.htmlTemplates import css, bot_template, user_template
 from utils import get_pdf_text, get_text_chunks
 
 load_dotenv()

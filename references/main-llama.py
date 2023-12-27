@@ -7,7 +7,7 @@ import google.generativeai as genai
 
 from PyPDF2 import PdfReader
 from dotenv import load_dotenv
-from htmlTemplates import css, bot_template, user_template
+from references.htmlTemplates import css, bot_template, user_template
 
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import VectorParams, Distance
