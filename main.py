@@ -9,14 +9,19 @@ from langchain.chat_models import ChatOpenAI
 from langchain.vectorstores.qdrant import Qdrant
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-# from htmlTemplates import css, bot_template, user_template
+
 from utils import get_pdf_text, get_text_chunks
 from dotenv import load_dotenv
+from icecream import ic
+
 
 load_dotenv()
 
 # choose embedding model
 embeddings = OpenAIEmbeddings()
+
+# init database client
+db_client = QdrantClient(os.getenv("QDRANT_URL"))
 
 
 def make_vectorstore(pdf_docs, collection_name):
@@ -34,22 +39,22 @@ def make_vectorstore(pdf_docs, collection_name):
         prefer_grpc=True,  # has to be, or creating will cause time out.
         force_recreate=True,
     )
-    print("from create:", vectors)
+    ic("from create:", vectors)
 
     return
 
 
 def get_db_collections() -> dict:
     """get collections name and vector count"""
-    client = QdrantClient(os.getenv("QDRANT_URL"))
-
     collections_list = [
         collection["name"]
-        for collection in client.get_collections().model_dump()["collections"]
+        for collection in db_client.get_collections().model_dump()["collections"]
     ]
 
     info_list = [
-        client.get_collection(collection_name=collection).model_dump()["vectors_count"]
+        db_client.get_collection(collection_name=collection).model_dump()[
+            "vectors_count"
+        ]
         for collection in collections_list
     ]
 
@@ -60,14 +65,25 @@ def load_conversation_chain(collection):
     """
     load vector store from qdrant
     and then initial a conversation chain
+
+    choose model ("gpt-4" is better than
+    "gpt-3.5-turbo-1106" but expensive)
+
+    ChatGoogleGenerativeAI still NOT working with ConversationalRetrievalChain
+    properly, maybe some keyword mismatch i don't know, but that is the point of
+    langchain right? just put it here for future ref.
+
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-pro",
+            convert_system_message_to_human=True,
+        )
+
     """
-    # choose model (gpt-4 is better but expensive)
     llm = ChatOpenAI(model="gpt-4")
 
     # load vector store from qdrant
-    client = QdrantClient(os.getenv("QDRANT_URL"))
     vectorstore = Qdrant(
-        client=client, collection_name=collection, embeddings=embeddings
+        client=db_client, collection_name=collection, embeddings=embeddings
     )
 
     # load chat history
@@ -89,27 +105,19 @@ def handle_userinput(user_question):
     """
     response = st.session_state.conversation({"question": user_question})
     st.session_state.chat_history = response["chat_history"]
-    print(st.session_state.chat_history)
+    ic(st.session_state.chat_history)
 
     for i, message in enumerate(st.session_state.chat_history):
         if i % 2 == 0:
-            # st.write(
-            #     user_template.replace("{{MSG}}", message.content),
-            #     unsafe_allow_html=True,
-            # )
-            with st.chat_message('user'):
+            with st.chat_message("user"):
                 st.markdown(message.content)
         else:
-            # st.write(
-            #     bot_template.replace("{{MSG}}", message.content), unsafe_allow_html=True
-            # )
-            with st.chat_message('assistant'):
+            with st.chat_message("assistant"):
                 st.markdown(message.content)
 
 
 def main():
     st.set_page_config(page_title="Chat with multiple PDFs", page_icon=":books:")
-    # st.write(css, unsafe_allow_html=True)
 
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
@@ -158,6 +166,7 @@ def main():
                         make_vectorstore(pdf_docs, collection_name)
                         st.rerun()
 
+        # a link to database
         st.write("[qdrant database UI](http://192.168.50.16:6333/dashboard)")
 
     st.header(
