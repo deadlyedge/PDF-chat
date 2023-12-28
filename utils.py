@@ -1,4 +1,5 @@
 from PyPDF2 import PdfReader
+from icecream import ic
 from langchain.text_splitter import CharacterTextSplitter
 
 
@@ -30,6 +31,6 @@ def get_text_chunks(text):
         length_function=len,
     )
     chunks = text_splitter.split_text(text)
-    print(len(chunks))
+    ic(len(chunks))
     return chunks
 

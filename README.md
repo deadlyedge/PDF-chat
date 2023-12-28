@@ -21,3 +21,6 @@ learnt a lot, streamlit is good and qdrant is finally work.
 ## todo
 
 i'd still try to make gemini work, for it's free so far..., some days later maybe, give langchain some time to fix their codes :)
+
+## UPDATE
+gemini works...just like they don't.  in one word: after change model loader, it work a 'little', and almost none for chinese :(

@@ -1,12 +1,13 @@
 import os
 import streamlit as st
-# from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, GoogleGenerativeAI
 
 from qdrant_client import QdrantClient
-
-from langchain.embeddings import OpenAIEmbeddings
-from langchain.chat_models import ChatOpenAI
 from langchain.vectorstores.qdrant import Qdrant
+
+# from langchain.embeddings import OpenAIEmbeddings
+# from langchain.chat_models import ChatOpenAI
+
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 
@@ -18,7 +19,36 @@ from icecream import ic
 load_dotenv()
 
 # choose embedding model
-embeddings = OpenAIEmbeddings()
+# embeddings = OpenAIEmbeddings()
+embeddings = GoogleGenerativeAIEmbeddings(
+    model="models/embedding-001",
+    google_api_key=os.getenv("GOOGLE_API_KEY"),  # type: ignore
+    task_type="retrieval_document",
+)
+
+"""
+choose model ("gpt-4" is better than
+"gpt-3.5-turbo-1106" but expensive)
+
+ChatGoogleGenerativeAI still NOT working with ConversationalRetrievalChain
+properly, maybe some keyword mismatch i don't know, but that is the point of
+langchain right? just put it here for future ref.
+
+for Gemini:
+    llm = ChatGoogleGenerativeAI(
+        model="gemini-pro",
+        convert_system_message_to_human=True,
+    ) # type: ignore
+
+for OpenAI:
+    llm = ChatOpenAI(model="gpt-4")
+
+"""
+llm = GoogleGenerativeAI(
+    model="gemini-pro",
+    google_api_key=os.getenv("GOOGLE_API_KEY"),
+)  # type: ignore
+
 
 # init database client
 db_client = QdrantClient(os.getenv("QDRANT_URL"))
@@ -65,23 +95,7 @@ def load_conversation_chain(collection):
     """
     load vector store from qdrant
     and then initial a conversation chain
-
-    choose model ("gpt-4" is better than
-    "gpt-3.5-turbo-1106" but expensive)
-
-    ChatGoogleGenerativeAI still NOT working with ConversationalRetrievalChain
-    properly, maybe some keyword mismatch i don't know, but that is the point of
-    langchain right? just put it here for future ref.
-
-        llm = ChatGoogleGenerativeAI(
-            model="gemini-pro",
-            convert_system_message_to_human=True,
-        )
-
     """
-    llm = ChatOpenAI(model="gpt-4")
-
-    # load vector store from qdrant
     vectorstore = Qdrant(
         client=db_client, collection_name=collection, embeddings=embeddings
     )
@@ -95,6 +109,7 @@ def load_conversation_chain(collection):
         retriever=vectorstore.as_retriever(),
         memory=memory,
     )
+
     return conversation_chain
 
 
